@@ -951,16 +951,16 @@ const HTML_CONTENT = `
 
     /* 分类和卡片样式 */
     .section {
-        margin-bottom: 25px;
+        margin-bottom: 15px;
         padding: 0 15px;
     }
 
     .section-title-container {
         display: flex;
         align-items: center;
-        margin-bottom: 18px;
+        margin-bottom: 8px;
         border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 10px;
+        padding-bottom: 5px;
         transition: border-color 0.3s ease;
         width: 100%;
         max-width: 1520px;
@@ -1027,7 +1027,7 @@ const HTML_CONTENT = `
         column-gap: 35px;
         row-gap: 15px;
         justify-content: start;
-        padding: 15px;
+        padding: 8px 15px;
         padding-left: 45px;
         margin: 0 auto;
         max-width: 1600px;
@@ -1218,7 +1218,7 @@ const HTML_CONTENT = `
         }
 
         .content {
-            margin-top: 50px; /* 增加顶部边距，适配更高的固定元素 */
+            margin-top: 110px; /* 增加顶部边距，适配更高的固定元素 */
             margin-bottom: 15px; /* 为底部的分类按钮和版权信息留出空间 */
             padding: 15px; /* 保持内边距 */
             transition: opacity 0.3s ease;
