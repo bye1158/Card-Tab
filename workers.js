@@ -5,7 +5,7 @@ const HTML_CONTENT = `
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Card Tab</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 61,38 95,38 67,58 78,92 50,72 22,92 33,58 5,38 39,38' fill='black'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>⭐</text></svg>">
     <style>
     /* 全局样式 */
     body {
@@ -33,7 +33,7 @@ const HTML_CONTENT = `
         z-index: 1000;
         padding: 10px;
         transition: all 0.3s ease;
-        height: 100px;
+        height: 150px;
         box-shadow: none; /* 移除阴影 */
     }
 
@@ -625,7 +625,7 @@ const HTML_CONTENT = `
 
     /* 主要内容区域样式 */
     .content {
-        margin-top: 120px;
+        margin-top: 170px;
         padding: 10px;
         max-width: 1600px;
         margin-left: auto;
@@ -951,16 +951,16 @@ const HTML_CONTENT = `
 
     /* 分类和卡片样式 */
     .section {
-        margin-bottom: 15px;
+        margin-bottom: 25px;
         padding: 0 15px;
     }
 
     .section-title-container {
         display: flex;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 18px;
         border-bottom: 1px solid #e0e0e0;
-        padding-bottom: 5px;
+        padding-bottom: 10px;
         transition: border-color 0.3s ease;
         width: 100%;
         max-width: 1520px;
@@ -1027,7 +1027,7 @@ const HTML_CONTENT = `
         column-gap: 35px;
         row-gap: 15px;
         justify-content: start;
-        padding: 8px 15px;
+        padding: 15px;
         padding-left: 45px;
         margin: 0 auto;
         max-width: 1600px;
@@ -1187,7 +1187,7 @@ const HTML_CONTENT = `
             position: fixed; /* 恢复固定定位，确保分类按钮位置正确 */
             padding: 8px 12px 5px 12px; /* 紧凑的内边距 */
             height: auto;
-            min-height: 110px; /* 增加最小高度，确保有足够空间 */
+            min-height: 140px; /* 增加最小高度，确保有足够空间 */
             box-shadow: none; /* 移除阴影 */
         }
 
@@ -1204,7 +1204,18 @@ const HTML_CONTENT = `
         }
 
         .category-buttons-container {
-            display: none !important;
+            width: 100%;
+            max-width: none;
+            padding: 6px;
+            overflow-x: auto; /* 允许水平滚动 */
+            flex-wrap: nowrap; /* 不允许按钮换行 */
+            justify-content: flex-start; /* 左对齐排列按钮 */
+            margin: 8px auto 5px; /* 紧凑的分类按钮边距 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+            background-color: transparent; /* 移动端也透明 */
+            border-radius: 8px;
+            gap: 4px; /* 减小按钮间距 */
         }
 
         body.dark-theme .category-buttons-container {
@@ -1218,8 +1229,8 @@ const HTML_CONTENT = `
         }
 
         .content {
-            margin-top: 110px; /* 增加顶部边距，适配更高的固定元素 */
-            margin-bottom: 15px; /* 为底部的分类按钮和版权信息留出空间 */
+            margin-top: 150px; /* 增加顶部边距，适配更高的固定元素 */
+            margin-bottom: 100px; /* 为底部的分类按钮和版权信息留出空间 */
             padding: 15px; /* 保持内边距 */
             transition: opacity 0.3s ease;
         }
@@ -1250,7 +1261,7 @@ const HTML_CONTENT = `
         }
 
         .search-bar select {
-            width: 65px; /* 缩小选择框宽度，参考佬友修改版 */
+            width: 80px; /* 缩小选择框宽度，参考佬友修改版 */
             flex: 0 0 auto;
             font-size: 12px; /* 减小字体以适应更小宽度 */
         }
@@ -1795,11 +1806,13 @@ const HTML_CONTENT = `
                         <option value="baidu">百度</option>
                         <option value="bing">必应</option>
                         <option value="google">谷歌</option>
+                        <option value="duckduckgo">DuckDuckGo</option>
                     </select>
                     <input type="text" id="search-input" placeholder="">
                     <button id="search-button">🔍</button>
                 </div>
             </div>
+            <div id="category-buttons-container" class="category-buttons-container"></div>
         </div>
         <!-- 右上角控制区域 -->
         <div class="top-right-controls">
@@ -1953,7 +1966,8 @@ const HTML_CONTENT = `
     const searchEngines = {
         baidu: "https://www.baidu.com/s?wd=",
         bing: "https://www.bing.com/search?q=",
-        google: "https://www.google.com/search?q="
+        google: "https://www.google.com/search?q=",
+        duckduckgo: "https://duckduckgo.com/?q="
     };
 
     let currentEngine = "baidu";
@@ -2500,6 +2514,56 @@ const HTML_CONTENT = `
         }
     }
 
+    // URL规范化函数
+    function normalizeUrl(url) {
+        if (!url || typeof url !== 'string') {
+            return url;
+        }
+
+        // 去除首尾空格
+        url = url.trim();
+
+        // 补全协议（如果缺少）
+        if (!/^https?:\\/\\//i.test(url)) {
+            url = 'https://' + url;
+        }
+
+        try {
+            const parsed = new URL(url);
+
+            // 协议小写
+            let normalized = parsed.protocol.toLowerCase() + '//';
+
+            // 域名小写
+            normalized += parsed.hostname.toLowerCase();
+
+            // 移除默认端口（80 for http, 443 for https）
+            if (parsed.port &&
+                !((parsed.protocol === 'http:' && parsed.port === '80') ||
+                  (parsed.protocol === 'https:' && parsed.port === '443'))) {
+                normalized += ':' + parsed.port;
+            }
+
+            // 路径保留原样（服务器可能区分大小写）
+            // 但移除根路径的单斜杠
+            if (parsed.pathname && parsed.pathname !== '/') {
+                normalized += parsed.pathname;
+            }
+
+            // 保留查询参数
+            if (parsed.search) {
+                normalized += parsed.search;
+            }
+
+            // 不保留 fragment（#hash 部分）
+
+            return normalized;
+        } catch {
+            // URL 解析失败，返回小写处理后的原始值
+            return url.toLowerCase();
+        }
+    }
+
     // 创建卡片
     function createCard(link, container) {
         const card = document.createElement('div');
@@ -2640,25 +2704,15 @@ const HTML_CONTENT = `
         const categorySelect = document.getElementById('category-select');
         categorySelect.innerHTML = '';
 
-        const keys = Object.keys(categories);
+        Object.keys(categories).forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        });
 
-    // ✅ 兜底：没有分类
-    if (keys.length === 0) {
-        const option = document.createElement('option');
-        option.textContent = '请先创建分类';
-        option.disabled = true;
-        option.selected = true;
-        categorySelect.appendChild(option);
-        return;
+        logAction('更新分类选择', { categoryCount: Object.keys(categories).length });
     }
-
-    keys.forEach(category => {
-        const option = document.createElement('option');
-        option.value = category;
-        option.textContent = category;
-        categorySelect.appendChild(option);
-    });
-}
 
     // 保存链接数据
     async function saveLinks() {
@@ -2667,6 +2721,12 @@ const HTML_CONTENT = `
         }
 
         let allLinks = [...publicLinks, ...privateLinks];
+
+        // 懒迁移：保存前规范化所有 URL
+        allLinks = allLinks.map(link => ({
+            ...link,
+            url: normalizeUrl(link.url)
+        }));
 
         try {
             await fetch('/api/saveOrder', {
@@ -2721,18 +2781,20 @@ const HTML_CONTENT = `
             return;
         }
 
-        // 检查URL是否已存在
-        const normalizedUrl = url.toLowerCase();
+        // 规范化 URL 并检查是否已存在
+        const normalizedUrl = normalizeUrl(url);
         const allLinks = [...publicLinks, ...privateLinks];
-        const isUrlExists = allLinks.some(link => link.url.toLowerCase() === normalizedUrl);
+        // 预处理：一次性规范化所有 URL（性能优化）
+        const existingUrls = new Set(allLinks.map(link => normalizeUrl(link.url)));
 
-        if (isUrlExists) {
+        if (existingUrls.has(normalizedUrl)) {
             await customAlert('该URL已存在，请勿重复添加', '添加卡片');
             document.getElementById('url-input').focus();
             return;
         }
 
-        const newLink = { name, url, tips, icon, category, isPrivate };
+        // 存储规范化后的 URL
+        const newLink = { name, url: normalizedUrl, tips, icon, category, isPrivate };
 
         if (isPrivate) {
             privateLinks.push(newLink);
@@ -3141,7 +3203,7 @@ const HTML_CONTENT = `
 
     // 打开GitHub仓库
     function openGitHub() {
-        window.open('https://github.com/bye1158/Card-Tab', '_blank');
+        window.open('https://github.com/hmhm2022/Card-Tab', '_blank');
         logAction('访问GitHub仓库');
     }
 
@@ -3307,8 +3369,6 @@ const HTML_CONTENT = `
 
     // 显示添加链接对话框
     function showAddDialog() {
-        updateCategorySelect(); // ✅ 强制刷新分类
-        document.getElementById('dialog-overlay').style.display = 'flex';
         document.getElementById('dialog-overlay').style.display = 'flex';
 
         const nameInput = document.getElementById('name-input');
@@ -3356,73 +3416,77 @@ const HTML_CONTENT = `
 
     // 更新链接
     async function updateLink(oldLink) {
-    if (!await validateToken()) return;
+        if (!await validateToken()) return;
 
-    const name = document.getElementById('name-input').value.trim();
-    const url = document.getElementById('url-input').value.trim();
-    const tips = document.getElementById('tips-input').value.trim();
-    const icon = document.getElementById('icon-input').value.trim();
-    const category = document.getElementById('category-select').value;
-    const isPrivate = document.getElementById('private-checkbox').checked;
+        const name = document.getElementById('name-input').value.trim();
+        const url = document.getElementById('url-input').value.trim();
+        const tips = document.getElementById('tips-input').value.trim();
+        const icon = document.getElementById('icon-input').value.trim();
+        const category = document.getElementById('category-select').value;
+        const isPrivate = document.getElementById('private-checkbox').checked;
 
-    if (!name || !url || !category) {
-        await customAlert('请填写完整信息', '编辑卡片');
-        return;
-    }
+        // 验证必填字段
+        if (!name || !url || !category) {
+            let errorMessage = '';
+            if (!name && !url) {
+                errorMessage = '请输入名称和URL';
+            } else if (!name) {
+                errorMessage = '请输入名称';
+            } else if (!url) {
+                errorMessage = '请输入URL';
+            }
 
-    const normalizedUrl = url.toLowerCase();
-    const allLinks = [...publicLinks, ...privateLinks];
-    const isUrlExists = allLinks.some(link =>
-        link.url.toLowerCase() === normalizedUrl && link.url !== oldLink.url
-    );
-
-    if (isUrlExists) {
-        await customAlert('该URL已存在，请勿重复添加', '编辑卡片');
-        return;
-    }
-
-    const updatedLink = { name, url, tips, icon, category, isPrivate };
-
-    let saved = false; // ⭐ 新增：保存状态标记
-
-    try {
-        // 先从两个数组里都删掉旧链接
-        publicLinks = publicLinks.filter(l => l.url !== oldLink.url);
-        privateLinks = privateLinks.filter(l => l.url !== oldLink.url);
-
-        // 再根据新状态放入正确的数组
-        if (isPrivate) {
-            privateLinks.push(updatedLink);
-        } else {
-            publicLinks.push(updatedLink);
+            await customAlert(errorMessage, '编辑卡片');
+            if (!name) {
+                document.getElementById('name-input').focus();
+            } else if (!url) {
+                document.getElementById('url-input').focus();
+            }
+            return;
         }
 
-        // 同步 links
-        links = isLoggedIn ? [...publicLinks, ...privateLinks] : publicLinks;
+        // 规范化 URL 并检查是否与其他链接重复（排除当前编辑的链接）
+        const normalizedUrl = normalizeUrl(url);
+        const normalizedOldUrl = normalizeUrl(oldLink.url);
+        const allLinks = [...publicLinks, ...privateLinks];
 
-        // ⭐ 真正的业务关键点
-        await saveLinks();
-        saved = true; // ⭐ 保存成功
+        // 预处理：一次性规范化所有 URL（性能优化）
+        const normalizedUrls = allLinks.map(link => normalizeUrl(link.url));
+        const isUrlExists = normalizedUrls.some(nUrl =>
+            nUrl === normalizedUrl && nUrl !== normalizedOldUrl
+        );
 
-        // UI 操作（允许失败）
-        renderSections();
-        hideAddDialog();
+        if (isUrlExists) {
+            await customAlert('该URL已存在，请勿重复添加', '编辑卡片');
+            document.getElementById('url-input').focus();
+            return;
+        }
 
-        logAction('更新卡片', updatedLink);
-    } catch (error) {
-        console.error(error);
+        // 存储规范化后的 URL
+        const updatedLink = { name, url: normalizedUrl, tips, icon, category, isPrivate };
 
-        // ⭐ 只在“未保存成功”时才提示失败
-        if (!saved) {
-            await customAlert('更新卡片失败，请重试', '编辑卡片');
-        } else {
-            // 可选：仅记录 UI 错误，不打扰用户
-            console.warn('数据已保存，但 UI 更新失败');
-            hideAddDialog(); // 至少把弹窗关掉
+        try {
+            // 替换旧链接
+            const list = oldLink.isPrivate ? privateLinks : publicLinks;
+            const listNormalizedUrls = list.map(l => normalizeUrl(l.url));
+            const index = listNormalizedUrls.indexOf(normalizedOldUrl);
+            if (index !== -1) {
+                list[index] = updatedLink;
+            }
+
+            // 同步更新 links
+            links = isLoggedIn ? [...publicLinks, ...privateLinks] : publicLinks;
+
+            await saveLinks();
+            renderSections();
+            hideAddDialog();
+
+            logAction('更新卡片', { oldUrl: oldLink.url, name, url, tips, icon, category, isPrivate });
+        } catch (error) {
+            logAction('更新卡片失败:', error);
+            await customAlert('更新卡片失败:' + error.message, '编辑卡片');
         }
     }
-}
-
 
     // 隐藏添加链接对话框
     function hideAddDialog() {
@@ -3989,24 +4053,49 @@ async function validateServerToken(authToken, env) {
     }
 
     try {
-        const [timestamp, hash] = authToken.split('.');
+        const parts = authToken.split('.');
+        let timestamp, expiryMinutes, hash;
+
+        // 兼容新旧两种 token 格式
+        if (parts.length === 3) {
+            // 新格式：timestamp.expiryMinutes.hash
+            [timestamp, expiryMinutes, hash] = parts;
+            expiryMinutes = parseInt(expiryMinutes);
+            if (isNaN(expiryMinutes)) {
+                throw new Error('Invalid expiry format');
+            }
+        } else if (parts.length === 2) {
+            // 旧格式：timestamp.hash（向后兼容，使用默认30分钟）
+            [timestamp, hash] = parts;
+            const envExpiry = parseInt(env.TOKEN_EXPIRY_MINUTES);
+            expiryMinutes = isNaN(envExpiry) ? 30 : envExpiry;
+        } else {
+            throw new Error('Invalid token format');
+        }
+
         const tokenTimestamp = parseInt(timestamp);
         const now = Date.now();
 
-        const FIFTEEN_MINUTES = 15 * 60 * 1000;
-        if (now - tokenTimestamp > FIFTEEN_MINUTES) {
-            return {
-                isValid: false,
-                status: 401,
-                response: {
-                    error: 'Token expired',
-                    tokenExpired: true,
-                    message: '登录已过期，请重新登录'
-                }
-            };
+        // 计算过期时间：-1 表示永久有效
+        if (expiryMinutes !== -1) {
+            const expiryMs = expiryMinutes * 60 * 1000;
+            if (now - tokenTimestamp > expiryMs) {
+                return {
+                    isValid: false,
+                    status: 401,
+                    response: {
+                        error: 'Token expired',
+                        tokenExpired: true,
+                        message: '登录已过期，请重新登录'
+                    }
+                };
+            }
         }
 
-        const tokenData = timestamp + "_" + env.ADMIN_PASSWORD;
+        // 根据 token 格式构建验证数据
+        const tokenData = parts.length === 3
+            ? timestamp + "_" + expiryMinutes + "_" + env.ADMIN_PASSWORD
+            : timestamp + "_" + env.ADMIN_PASSWORD;
         const encoder = new TextEncoder();
         const data = encoder.encode(tokenData);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -4138,23 +4227,35 @@ export default {
 
       if (url.pathname === '/api/verifyPassword' && request.method === 'POST') {
         try {
-            const { password } = await request.json();
+            const body = await request.json();
+            const { password, expiryMinutes: clientExpiry } = body;
             const isValid = password === env.ADMIN_PASSWORD;
 
             if (isValid) {
-                // 生成包含时间戳的加密 token
+                // 允许的有效期白名单（分钟）：15分钟、1小时、1天、7天、30天、永久
+                const ALLOWED_EXPIRY_VALUES = [15, 60, 1440, 10080, 43200, -1];
+                const defaultExpiry = parseInt(env.TOKEN_EXPIRY_MINUTES) || 30;
+
+                // 验证客户端传入的有效期是否在白名单中
+                let expiryMinutes = defaultExpiry;
+                if (typeof clientExpiry === 'number' && Number.isInteger(clientExpiry) && ALLOWED_EXPIRY_VALUES.includes(clientExpiry)) {
+                    expiryMinutes = clientExpiry;
+                }
+
+                // 生成包含时间戳和有效期的加密 token
                 const timestamp = Date.now();
-                const tokenData = timestamp + "_" + env.ADMIN_PASSWORD;
+                const tokenData = timestamp + "_" + expiryMinutes + "_" + env.ADMIN_PASSWORD;
                 const encoder = new TextEncoder();
                 const data = encoder.encode(tokenData);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', data);
 
-                // 使用指定格式：timestamp.hash
-                const token = timestamp + "." + btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+                // 使用指定格式：timestamp.expiryMinutes.hash
+                const token = timestamp + "." + expiryMinutes + "." + btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
 
                 return new Response(JSON.stringify({
                     valid: true,
-                    token: token
+                    token: token,
+                    expiryMinutes: expiryMinutes
                 }), {
                     status: 200,
                     headers: { 'Content-Type': 'application/json' }
