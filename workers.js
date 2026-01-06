@@ -2640,15 +2640,25 @@ const HTML_CONTENT = `
         const categorySelect = document.getElementById('category-select');
         categorySelect.innerHTML = '';
 
-        Object.keys(categories).forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        });
+        const keys = Object.keys(categories);
 
-        logAction('更新分类选择', { categoryCount: Object.keys(categories).length });
+    // ✅ 兜底：没有分类
+    if (keys.length === 0) {
+        const option = document.createElement('option');
+        option.textContent = '请先创建分类';
+        option.disabled = true;
+        option.selected = true;
+        categorySelect.appendChild(option);
+        return;
     }
+
+    keys.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+}
 
     // 保存链接数据
     async function saveLinks() {
@@ -3297,6 +3307,8 @@ const HTML_CONTENT = `
 
     // 显示添加链接对话框
     function showAddDialog() {
+        updateCategorySelect(); // ✅ 强制刷新分类
+        document.getElementById('dialog-overlay').style.display = 'flex';
         document.getElementById('dialog-overlay').style.display = 'flex';
 
         const nameInput = document.getElementById('name-input');
