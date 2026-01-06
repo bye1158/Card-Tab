@@ -3264,7 +3264,6 @@ const HTML_CONTENT = `
 
     // 显示编辑链接对话框
     function showEditDialog(link) {
-        updateCategorySelect();
         document.getElementById('dialog-overlay').style.display = 'flex';
 
         document.getElementById('name-input').value = link.name;
@@ -3356,7 +3355,7 @@ const HTML_CONTENT = `
     }
 
     // 更新链接
-async function updateLink(oldLink) {
+    async function updateLink(oldLink) {
     if (!await validateToken()) return;
 
     const name = document.getElementById('name-input').value.trim();
@@ -3384,8 +3383,10 @@ async function updateLink(oldLink) {
 
     const updatedLink = { name, url, tips, icon, category, isPrivate };
 
+    let saved = false; // ⭐ 新增：保存状态标记
+
     try {
-        // 先从两个数组里都删掉旧链接（关键）
+        // 先从两个数组里都删掉旧链接
         publicLinks = publicLinks.filter(l => l.url !== oldLink.url);
         privateLinks = privateLinks.filter(l => l.url !== oldLink.url);
 
@@ -3399,19 +3400,29 @@ async function updateLink(oldLink) {
         // 同步 links
         links = isLoggedIn ? [...publicLinks, ...privateLinks] : publicLinks;
 
-        // 保存 + 全量重渲染
+        // ⭐ 真正的业务关键点
         await saveLinks();
-        renderSections();
+        saved = true; // ⭐ 保存成功
 
-        // 关闭弹窗
+        // UI 操作（允许失败）
+        renderSections();
         hideAddDialog();
 
         logAction('更新卡片', updatedLink);
     } catch (error) {
         console.error(error);
-        await customAlert('更新卡片失败，请重试', '编辑卡片');
+
+        // ⭐ 只在“未保存成功”时才提示失败
+        if (!saved) {
+            await customAlert('更新卡片失败，请重试', '编辑卡片');
+        } else {
+            // 可选：仅记录 UI 错误，不打扰用户
+            console.warn('数据已保存，但 UI 更新失败');
+            hideAddDialog(); // 至少把弹窗关掉
+        }
     }
 }
+
 
     // 隐藏添加链接对话框
     function hideAddDialog() {
@@ -3641,16 +3652,18 @@ async function updateLink(oldLink) {
         // 清空搜索框
         document.getElementById('bookmark-search-input').value = '';
 
-       // 重新渲染正常的分类和书签
-       renderSections();
+        // 重新渲染正常的分类和书签
+        renderSections();
 
-          const categoryButtonsContainer = document.getElementById('category-buttons-container');
-          if (!categoryButtonsContainer) {
-          return; // ❗DOM 不存在，直接退出
-          }
+        // 显示分类按钮
+        const categoryButtonsContainer = document.getElementById('category-buttons-container');
+        if (categoryButtonsContainer) {
+            categoryButtonsContainer.style.display = 'flex';
+        }
 
-categoryButtonsContainer.style.display = 'flex';
-renderCategoryButtons();
+        // 重新渲染分类按钮，确保分类按钮的正确显示
+        renderCategoryButtons();
+    }
 
     // 书签搜索输入框回车事件
     document.getElementById('bookmark-search-input').addEventListener('keypress', (e) => {
