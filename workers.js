@@ -3264,6 +3264,7 @@ const HTML_CONTENT = `
 
     // 显示编辑链接对话框
     function showEditDialog(link) {
+        updateCategorySelect();
         document.getElementById('dialog-overlay').style.display = 'flex';
 
         document.getElementById('name-input').value = link.name;
@@ -3355,72 +3356,62 @@ const HTML_CONTENT = `
     }
 
     // 更新链接
-    async function updateLink(oldLink) {
-        if (!await validateToken()) return;
+async function updateLink(oldLink) {
+    if (!await validateToken()) return;
 
-        const name = document.getElementById('name-input').value.trim();
-        const url = document.getElementById('url-input').value.trim();
-        const tips = document.getElementById('tips-input').value.trim();
-        const icon = document.getElementById('icon-input').value.trim();
-        const category = document.getElementById('category-select').value;
-        const isPrivate = document.getElementById('private-checkbox').checked;
+    const name = document.getElementById('name-input').value.trim();
+    const url = document.getElementById('url-input').value.trim();
+    const tips = document.getElementById('tips-input').value.trim();
+    const icon = document.getElementById('icon-input').value.trim();
+    const category = document.getElementById('category-select').value;
+    const isPrivate = document.getElementById('private-checkbox').checked;
 
-        // 验证必填字段
-        if (!name || !url || !category) {
-            let errorMessage = '';
-            if (!name && !url) {
-                errorMessage = '请输入名称和URL';
-            } else if (!name) {
-                errorMessage = '请输入名称';
-            } else if (!url) {
-                errorMessage = '请输入URL';
-            }
-
-            await customAlert(errorMessage, '编辑卡片');
-            if (!name) {
-                document.getElementById('name-input').focus();
-            } else if (!url) {
-                document.getElementById('url-input').focus();
-            }
-            return;
-        }
-
-        // 检查URL是否与其他链接重复（排除当前编辑的链接）
-        const normalizedUrl = url.toLowerCase();
-        const allLinks = [...publicLinks, ...privateLinks];
-        const isUrlExists = allLinks.some(link =>
-            link.url.toLowerCase() === normalizedUrl && link.url !== oldLink.url
-        );
-
-        if (isUrlExists) {
-            await customAlert('该URL已存在，请勿重复添加', '编辑卡片');
-            document.getElementById('url-input').focus();
-            return;
-        }
-
-        const updatedLink = { name, url, tips, icon, category, isPrivate };
-
-        try {
-            // 替换旧链接
-            const list = oldLink.isPrivate ? privateLinks : publicLinks;
-            const index = list.findIndex(l => l.url === oldLink.url);
-            if (index !== -1) {
-                list[index] = updatedLink;
-            }
-
-            // 同步更新 links
-            links = isLoggedIn ? [...publicLinks, ...privateLinks] : publicLinks;
-
-            await saveLinks();
-            renderSections();
-            hideAddDialog();
-
-            logAction('更新卡片', { oldUrl: oldLink.url, name, url, tips, icon, category, isPrivate });
-        } catch (error) {
-            logAction('更新卡片失败:', error);
-            await customAlert('更新卡片失败:' + error.message, '编辑卡片');
-        }
+    if (!name || !url || !category) {
+        await customAlert('请填写完整信息', '编辑卡片');
+        return;
     }
+
+    const normalizedUrl = url.toLowerCase();
+    const allLinks = [...publicLinks, ...privateLinks];
+    const isUrlExists = allLinks.some(link =>
+        link.url.toLowerCase() === normalizedUrl && link.url !== oldLink.url
+    );
+
+    if (isUrlExists) {
+        await customAlert('该URL已存在，请勿重复添加', '编辑卡片');
+        return;
+    }
+
+    const updatedLink = { name, url, tips, icon, category, isPrivate };
+
+    try {
+        // 先从两个数组里都删掉旧链接（关键）
+        publicLinks = publicLinks.filter(l => l.url !== oldLink.url);
+        privateLinks = privateLinks.filter(l => l.url !== oldLink.url);
+
+        // 再根据新状态放入正确的数组
+        if (isPrivate) {
+            privateLinks.push(updatedLink);
+        } else {
+            publicLinks.push(updatedLink);
+        }
+
+        // 同步 links
+        links = isLoggedIn ? [...publicLinks, ...privateLinks] : publicLinks;
+
+        // 保存 + 全量重渲染
+        await saveLinks();
+        renderSections();
+
+        // 关闭弹窗
+        hideAddDialog();
+
+        logAction('更新卡片', updatedLink);
+    } catch (error) {
+        console.error(error);
+        await customAlert('更新卡片失败，请重试', '编辑卡片');
+    }
+}
 
     // 隐藏添加链接对话框
     function hideAddDialog() {
@@ -3650,18 +3641,16 @@ const HTML_CONTENT = `
         // 清空搜索框
         document.getElementById('bookmark-search-input').value = '';
 
-        // 重新渲染正常的分类和书签
-        renderSections();
+       // 重新渲染正常的分类和书签
+       renderSections();
 
-        // 显示分类按钮
-        const categoryButtonsContainer = document.getElementById('category-buttons-container');
-        if (categoryButtonsContainer) {
-            categoryButtonsContainer.style.display = 'flex';
-        }
+          const categoryButtonsContainer = document.getElementById('category-buttons-container');
+          if (!categoryButtonsContainer) {
+          return; // ❗DOM 不存在，直接退出
+          }
 
-        // 重新渲染分类按钮，确保分类按钮的正确显示
-        renderCategoryButtons();
-    }
+categoryButtonsContainer.style.display = 'flex';
+renderCategoryButtons();
 
     // 书签搜索输入框回车事件
     document.getElementById('bookmark-search-input').addEventListener('keypress', (e) => {
